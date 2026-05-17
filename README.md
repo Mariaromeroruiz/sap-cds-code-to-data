@@ -147,9 +147,8 @@ ENDIF.
 
 ---
 
-## 🧠 Reflexión técnica: lo que el ejercicio no hace (y por qué importa)
+##  Reflexión técnica: lo que el ejercicio no hace (y por qué importa)
 
-> ⚠️ **Nota de mejora identificada durante el desarrollo**
 
 En la vista implementada, el campo `carrier_id` no se incluye como clave. En el modelo de datos de vuelos de SAP, el número de conexión (por ejemplo `0001`) se repite entre distintas aerolíneas. Sin `carrier_id` como parte de la clave compuesta, la vista podría devolver registros duplicados cuando el volumen de datos es alto.
 
