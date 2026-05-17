@@ -1,0 +1,69 @@
+//@AccessControl.authorizationCheck: #NOT_REQUIRED
+@AbapCatalog.sqlViewName: 'ZCDS_AEROLINEAS'
+@EndUserText.label: 'Rutas de vuelo con nombre de aerolínea'
+@Metadata.ignorePropagatedAnnotations: true
+
+/*
+  VISTA CDS: ZCDS_AEROLINEAS_18
+  ═══════════════════════════════════════════════════════════════════
+
+  PROPÓSITO:
+  Objeto permanente en el diccionario de datos que implementa el
+  paradigma Code-to-Data. El JOIN entre /DMO/CONNECTION y /DMO/CARRIER
+  vive en la definición de la vista, no en el programa consumidor.
+
+  VENTAJAS FRENTE A LOS NIVELES ANTERIORES:
+  ✅ Reutilizable: cualquier programa, servicio OData o app Fiori
+     puede hacer SELECT * FROM esta vista sin reimplementar la lógica.
+  ✅ Mantenible: si cambia la lógica de cruce, se modifica aquí
+     y todos los consumidores se benefician automáticamente.
+  ✅ Clean Core: compatible con upgrades de S/4HANA sin modificaciones.
+  ✅ Rendimiento: el procesamiento es 100% en SAP HANA.
+
+  NOTA DE MEJORA IDENTIFICADA:
+  En este ejercicio, connection_id es la única clave definida.
+  En un entorno productivo, carrier_id debería incluirse también
+  como clave compuesta, ya que el mismo connection_id (ej: 0001)
+  puede repetirse en distintas aerolíneas. Sin clave compuesta,
+  podrían aparecer registros duplicados con alto volumen de datos.
+
+  VERSIÓN MEJORADA PARA PRODUCCIÓN (ver comentario al final).
+
+  TABLAS:
+  - /dmo/connection aliasada como 'c' (tabla principal)
+  - /dmo/carrier    aliasada como 'a' (join)
+  Clave de join: c.carrier_id = a.carrier_id
+*/
+
+define view ZCDS_AEROLINEAS_18
+  as select from /dmo/connection as c
+  join /dmo/carrier as a on c.carrier_id = a.carrier_id
+
+{
+      /*
+        NOTA: en este ejercicio se omitió carrier_id como clave.
+        Ver sección "Reflexión técnica" del README para el análisis
+        de por qué esto podría causar duplicados en producción.
+      */
+  key c.connection_id   as Conexion,
+      c.airport_from_id as Aeropuerto,
+      c.airport_to_id   as ID,
+      a.name            as Nombre
+}
+
+/*
+  ═══════════════════════════════════════════════════════════════════
+  VERSIÓN MEJORADA (buenas prácticas para entorno productivo):
+
+  define view ZCDS_AEROLINEAS_18
+    as select from /dmo/connection as c
+    join /dmo/carrier as a on c.carrier_id = a.carrier_id
+  {
+    key c.carrier_id      as CarrierId,    " ← clave compuesta: evita duplicados
+    key c.connection_id   as Conexion,
+        c.airport_from_id as Aeropuerto,
+        c.airport_to_id   as ID,
+        a.name            as Nombre
+  }
+  ═══════════════════════════════════════════════════════════════════
+*/
